@@ -1,5 +1,6 @@
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
+from datetime import date
 
 # Create instance of the app
 app = Flask(__name__)
@@ -12,11 +13,36 @@ db = SQLAlchemy(app)
 
 # Declaring a model to create a table in the database (postgresql) (entity)
 class Card(db.Model):
+    __tablename__ = "cards"
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(100))
     description = db.Column(db.Text())
     date_created = db.Column(db.Date())
 
+# Declaring a cli command
+@app.cli.command("db_create")
+def db_create():
+    # Drop table
+    db.drop_all()
+    # Create table
+    db.create_all()
+    print("Created tables")
+
+@app.cli.command("db_seed")
+def db_seed():
+    card = Card(
+        title = "Start the project",
+        description = "Stage 1 = Create ERD",
+        date_created = date.today()
+    )
+    # Adding transaction to queue
+    db.session.add(card)
+    db.session.commit()
+
+    print("Database Seeded")
+
+
+# Declaring a route
 @app.route("/")
 def index():
     return "Hello World!"
