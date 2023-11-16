@@ -23,6 +23,7 @@ class Card(db.Model):
     status = db.Column(db.String(30))
     date_created = db.Column(db.Date())
 
+   
 class CardSchema(ma.Schema):
     class Meta:
         fields = ("id", "title", "description", "status", "date_created")
@@ -86,7 +87,7 @@ def all_cards():
     stmt = db.select(Card)
     cards = db.session.scalars(stmt).all()
     return CardSchema(many=True).dump(cards)
-    #dump() will convert a Python object into a JSON object, 
+    # dump() will convert a Python object into a JSON object, 
     # dumps() encodes a Python object into JSON string, 
     # which makes it more readily readable to more frameworks/languages.
    
