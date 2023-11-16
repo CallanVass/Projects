@@ -14,6 +14,7 @@ db = SQLAlchemy(app)
 # Declaring a model to create a table in the database (postgresql) (entity)
 class Card(db.Model):
     __tablename__ = "cards"
+
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(100))
     description = db.Column(db.Text())
@@ -30,16 +31,38 @@ def db_create():
 
 @app.cli.command("db_seed")
 def db_seed():
-    card = Card(
+    cards = [
+    Card(
         title = "Start the project",
         description = "Stage 1 = Create ERD",
         date_created = date.today()
-    )
+    ),
+    Card(
+        title = "ORM Queries",
+        description = "Stage 2 = Implement CRUD queries",
+        date_created = date.today()
+    ),
+    Card(
+        title = "Marshmallow",
+        description = "Stage 3 = Implement JSONify of models",
+        date_created = date.today()
+    ),
+    ]
     # Adding transaction to queue
-    db.session.add(card)
+    db.session.add_all(cards)
+    # Commiting transaction
     db.session.commit()
 
     print("Database Seeded")
+
+
+@app.cli.command("all_cards")
+def all_cards():
+    # Select * from cards;
+    stmt = db.select(Card)
+    print(stmt)
+
+
 
 
 # Declaring a route
