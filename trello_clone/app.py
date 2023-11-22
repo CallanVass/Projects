@@ -3,6 +3,7 @@ from flask_sqlalchemy import SQLAlchemy
 from datetime import date
 from flask_marshmallow import Marshmallow
 from flask_bcrypt import Bcrypt
+from sqlalchemy.exc import IntegrityError
 
 # Create instance of the app
 app = Flask(__name__)
@@ -100,21 +101,45 @@ def db_seed():
 
 @app.route("/users/register", methods=["POST"])
 def register():
-    # Parse incoming POST body through the schema (excludes id)
-    user_info = UserSchema(exclude=["id"]).load(request.json)
-    # Create a new user with the parsed data
-    user = User(
-        email=user_info["email"],
-        password=bcrypt.generate_password_hash(user_info["password"]).decode("utf8"),
-        name=user_info.get("name", "")
-    )
-    # Add and commit the new user to the database
-    db.session.add(user)
-    db.session.commit()
-    print(user.__dict__)
-    # Return the new user (exludes password)
-    return UserSchema(exclude=["password"]).dump(user), 201
+    try:
+        # Parse incoming POST body through the schema (excludes id)
+        user_info = UserSchema(exclude=["id"]).load(request.json)
+        # Create a new user with the parsed data
+        user = User(
+            email=user_info["email"],
+            password=bcrypt.generate_password_hash(user_info["password"]).decode("utf8"),
+            name=user_info.get("name", "")
+        )
+        # Add and commit the new user to the database
+        db.session.add(user)
+        db.session.commit()
+        print(user.__dict__)
+        # Return the new user (exludes password)
+        return UserSchema(exclude=["password"]).dump(user), 201
+    except IntegrityError:
+        return {"error": "Email address already in use"}, 409
 
+
+@app.route("/users/login", methods=["POST"])
+def login():
+    # 1 Parse incoming POST body through the schema
+    user_info = UserSchema(exclude=["id", "name", "is_admin"]).load(request.json)
+    # 2 Select user with email that matches the one in the POST body
+    # 3 Check the password hash matches
+    stmt = db.select(User).where(User.email == user_info["email"])
+    user = db.session.scalar(stmt)
+    if user and bcrypt.check_password_hash(user.password, user_info["password"]):
+        return UserSchema(exclude=["password"]).dump(user)
+    else:
+        return {"error": "Invalid email or password"}, 401
+    # print(user)
+
+    # 4 Create a JWT token
+
+    # 5 Return token to the client
+
+
+    return "ok"
 
 
 @app.cli.command("all_cards")
@@ -128,6 +153,7 @@ def all_cards():
     for card in cards:
         print(card.__dict__)
     # Could also use __repr__ for a string representation of an object
+
 
 @app.route("/cards")
 def all_cards():
@@ -145,4 +171,9 @@ def all_cards():
 @app.route("/")
 def index():
     return "Hello World!"
+
+# Handles error generally if route doesn't have try/except
+@app.errorhandler(IntegrityError)
+def handler(error):
+    return {"error": str(error)}, 409
 
