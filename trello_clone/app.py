@@ -4,17 +4,26 @@ from datetime import date
 from flask_marshmallow import Marshmallow
 from flask_bcrypt import Bcrypt
 from sqlalchemy.exc import IntegrityError
+from flask_jwt_extended import JWTManager, create_access_token, jwt_required
+from datetime import timedelta
 
 # Create instance of the app
 app = Flask(__name__)
 
+
 # Connection string
+# This could be generated at random every now and then (coded, obviously)
+app.config["JWT_SECRET_KEY"] = "Talkative Monkeys"
+
 app.config["SQLALCHEMY_DATABASE_URI"] = "postgresql+psycopg2://trello_dev:callan@127.0.0.1:5432/trello"
 
 # Import (must be after config but before routes/error handlers)
+# Pass instances of flask app to the modules
 db = SQLAlchemy(app)
 ma = Marshmallow(app)
 bcrypt = Bcrypt(app)
+jwt = JWTManager(app)
+
 
 # Declaring a model to create a table in the database (postgresql) (entity)
 class Card(db.Model):
@@ -129,17 +138,13 @@ def login():
     stmt = db.select(User).where(User.email == user_info["email"])
     user = db.session.scalar(stmt)
     if user and bcrypt.check_password_hash(user.password, user_info["password"]):
-        return UserSchema(exclude=["password"]).dump(user)
+        # 4 Create a JWT token
+        token = create_access_token(identity=user.email, expires_delta=timedelta(hours=2)) # ,additional_claims=["email": user.email])
+        # 5 Return token to the client
+        return {"token": token, "user": UserSchema(exclude=["password"]).dump(user)}
     else:
         return {"error": "Invalid email or password"}, 401
     # print(user)
-
-    # 4 Create a JWT token
-
-    # 5 Return token to the client
-
-
-    return "ok"
 
 
 @app.cli.command("all_cards")
@@ -156,6 +161,7 @@ def all_cards():
 
 
 @app.route("/cards")
+@jwt_required()
 def all_cards():
     # Select * from cards;
     stmt = db.select(Card)#.where(db.or_(Card.status != "Done", Card.id > 2)).order_by(Card.title.desc())
