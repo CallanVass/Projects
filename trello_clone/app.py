@@ -1,34 +1,11 @@
-from flask import Flask, request, abort
-from flask_sqlalchemy import SQLAlchemy
+from flask import request, abort
 from datetime import date
-from flask_marshmallow import Marshmallow
-from flask_bcrypt import Bcrypt
 from sqlalchemy.exc import IntegrityError
-from flask_jwt_extended import JWTManager, create_access_token, jwt_required, get_jwt_identity
+from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identity
 from datetime import timedelta
 from os import environ
-
-
+from models.user import User, UserSchema
 # ENSURE YOU UNTRACK .FLASKENV
-
-# ACL = Access Control List
-# Create instance of the app
-app = Flask(__name__)
-
-
-# Connection string
-# This could be generated at random every now and then (coded, obviously)
-app.config["JWT_SECRET_KEY"] = environ.get("JWT_SECRET_KEY")
-
-app.config["SQLALCHEMY_DATABASE_URI"
-] = "postgresql+psycopg2://trello_dev:callan@127.0.0.1:5432/trello"
-
-# Import (must be after config but before routes/error handlers)
-# Pass instances of flask app to the modules
-db = SQLAlchemy(app)
-ma = Marshmallow(app)
-bcrypt = Bcrypt(app)
-jwt = JWTManager(app)
 
 def admin_required():
     # Checking for user in header (decoded with jwt-get-identity) (Get email address)
@@ -61,19 +38,6 @@ class CardSchema(ma.Schema):
     class Meta:
         fields = ("id", "title", "description", "status", "date_created")
 
-# Create user instance
-class User(db.Model):
-    __tablename__ = "users"
-
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String)
-    email = db.Column(db.String, nullable=False, unique=True)
-    password = db.Column(db.String, nullable=False)
-    is_admin = db.Column(db.Boolean, default=False)
-
-class UserSchema(ma.Schema):
-    class Meta:
-        fields = ("id", "name", "email", "password", "is_admin")
 
 # Declaring a cli command
 @app.cli.command("db_create")
