@@ -1,4 +1,4 @@
-from 
+from setup import db, ma
 
 
 # Create user instance
