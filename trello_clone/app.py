@@ -1,21 +1,27 @@
-from flask import Flask, request
+from flask import Flask, request, abort
 from flask_sqlalchemy import SQLAlchemy
 from datetime import date
 from flask_marshmallow import Marshmallow
 from flask_bcrypt import Bcrypt
 from sqlalchemy.exc import IntegrityError
-from flask_jwt_extended import JWTManager, create_access_token, jwt_required
+from flask_jwt_extended import JWTManager, create_access_token, jwt_required, get_jwt_identity
 from datetime import timedelta
+from os import environ
 
+
+# ENSURE YOU UNTRACK .FLASKENV
+
+# ACL = Access Control List
 # Create instance of the app
 app = Flask(__name__)
 
 
 # Connection string
 # This could be generated at random every now and then (coded, obviously)
-app.config["JWT_SECRET_KEY"] = "Talkative Monkeys"
+app.config["JWT_SECRET_KEY"] = environ.get("JWT_SECRET_KEY")
 
-app.config["SQLALCHEMY_DATABASE_URI"] = "postgresql+psycopg2://trello_dev:callan@127.0.0.1:5432/trello"
+app.config["SQLALCHEMY_DATABASE_URI"
+] = "postgresql+psycopg2://trello_dev:callan@127.0.0.1:5432/trello"
 
 # Import (must be after config but before routes/error handlers)
 # Pass instances of flask app to the modules
@@ -23,6 +29,21 @@ db = SQLAlchemy(app)
 ma = Marshmallow(app)
 bcrypt = Bcrypt(app)
 jwt = JWTManager(app)
+
+def admin_required():
+    # Checking for user in header (decoded with jwt-get-identity) (Get email address)
+    user_email = get_jwt_identity()
+    # Check user email against the databasse
+    stmt = db.select(User).where(User.email == user_email)
+    # Get an instance of the model (stmt user model)
+    user = db.session.scalar(stmt)
+    if not (user and user.is_admin):
+        abort(401)
+
+# Handling the 401 error (This will pick up every 401 error)
+@app.errorhandler(401)
+def unauthorised(err):
+    return {"error": "You are not authorised to access this resource"}
 
 
 # Declaring a model to create a table in the database (postgresql) (entity)
@@ -111,8 +132,8 @@ def db_seed():
 @app.route("/users/register", methods=["POST"])
 def register():
     try:
-        # Parse incoming POST body through the schema (excludes id)
-        user_info = UserSchema(exclude=["id"]).load(request.json)
+        # Parse incoming POST body through the schema (excludes id and is_admin to ensure users can't make themselves admin)
+        user_info = UserSchema(exclude=["id", "is_admin"]).load(request.json)
         # Create a new user with the parsed data
         user = User(
             email=user_info["email"],
@@ -144,7 +165,7 @@ def login():
         return {"token": token, "user": UserSchema(exclude=["password"]).dump(user)}
     else:
         return {"error": "Invalid email or password"}, 401
-    # print(user)
+
 
 
 @app.cli.command("all_cards")
@@ -163,6 +184,7 @@ def all_cards():
 @app.route("/cards")
 @jwt_required()
 def all_cards():
+    admin_required()
     # Select * from cards;
     stmt = db.select(Card)#.where(db.or_(Card.status != "Done", Card.id > 2)).order_by(Card.title.desc())
     cards = db.session.scalars(stmt).all()
