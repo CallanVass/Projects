@@ -1,6 +1,3 @@
-from flask import abort
-from flask_jwt_extended import  get_jwt_identity
-from models.user import User
 from setup import app
 # Importing the blueprints
 from blueprints.cli_bp import db_commands
