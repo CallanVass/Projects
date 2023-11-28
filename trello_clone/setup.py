@@ -5,6 +5,7 @@ from flask_bcrypt import Bcrypt
 from flask_jwt_extended import JWTManager
 from os import environ
 
+# from sqlalchemy.exc import IntegrityError
 
 #  ACL = Access Control List
 # Create instance of the app
@@ -23,3 +24,15 @@ db = SQLAlchemy(app)
 ma = Marshmallow(app)
 bcrypt = Bcrypt(app)
 jwt = JWTManager(app)
+
+
+
+# Handling the 401 error (This will pick up every 401 error)
+@app.errorhandler(401)
+def unauthorised(err):
+    return {"error": "You are not authorised to access this resource"}
+
+# Handles error generally if route doesn't have try/except
+# @app.errorhandler(IntegrityError)
+# def handler(error):
+#     return {"error": str(error)}, 409

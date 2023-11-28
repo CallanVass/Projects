@@ -4,7 +4,9 @@ from models.card import Card
 from models.user import User
 from datetime import date
 
+# Declaring the blueprint (Dunders are variables or functions that have a special meaning)
 db_commands = Blueprint("db", __name__)
+
 # Declaring a cli command
 @db_commands.cli.command("create")
 def db_create():

@@ -2,7 +2,7 @@
 
 This project is a Trello Clone API (lacking any sort of front-end as of yet) that allows users to create new cards, delete them, login, and signup.
 
-# Tech Used
+# Software and Dependencies
 
 ## Flask
 
