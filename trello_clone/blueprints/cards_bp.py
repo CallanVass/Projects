@@ -1,5 +1,5 @@
-from flask import Blueprint, request, abort
-from flask_jwt_extended import jwt_required
+from flask import Blueprint, request
+from flask_jwt_extended import jwt_required, get_jwt_identity
 from setup import db
 from models.card import CardSchema, Card
 from auth import admin_required
@@ -16,7 +16,8 @@ def all_cards():
     stmt = db.select(Card
     )#.where(db.or_(Card.status != "Done", Card.id > 2)).order_by(Card.title.desc())
     cards = db.session.scalars(stmt).all()
-    return CardSchema(many=True).dump(cards)
+    # Excludes cards embedded in the use (for the exclude=["user.cards"])
+    return CardSchema(many=True, exclude=["user.cards"]).dump(cards)
     # dump() will convert a Python object into a JSON object, 
     # dumps() encodes a Python object into JSON string, 
     # which makes it more readily readable to more frameworks/languages.
@@ -42,6 +43,9 @@ def one_card(id):
     stmt = db.select(Card).filter_by(id=id) # .where(Card.id == id)
     card = db.session.scalar(stmt)
     if card:
+        # Prints user to terminal
+        print(card.user)
+        # Returns CardSchema
         return CardSchema().dump(card)
     else:
         return {"error": "card not found"}, 404
@@ -56,7 +60,8 @@ def create_card():
     card =  Card(
         title = card_info["title"],
         description = card_info.get("description", ""),
-        status = card_info.get("status", "To Do")
+        status = card_info.get("status", "To Do"),
+        user_id = get_jwt_identity()
     )
     db.session.add(card)
     db.session.commit()
