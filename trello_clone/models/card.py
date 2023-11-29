@@ -6,12 +6,15 @@ class Card(db.Model):
     __tablename__ = "cards"
 
     id = db.Column(db.Integer, primary_key=True)
+
     title = db.Column(db.String(100), nullable=False)
     description = db.Column(db.Text())
     status = db.Column(db.String(30), default="To Do")
     date_created = db.Column(db.Date(), default=datetime.now().strftime("%Y-%m-%d"))
 
+    user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
+
    
 class CardSchema(ma.Schema):
     class Meta:
-        fields = ("id", "title", "description", "status", "date_created")
+        fields = ("id", "title", "description", "status", "date_created", "user_id")

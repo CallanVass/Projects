@@ -13,7 +13,8 @@ cards_bp = Blueprint("cards", __name__, url_prefix="/cards")
 @jwt_required()
 def all_cards():
     # Select * from cards;
-    stmt = db.select(Card)#.where(db.or_(Card.status != "Done", Card.id > 2)).order_by(Card.title.desc())
+    stmt = db.select(Card
+    )#.where(db.or_(Card.status != "Done", Card.id > 2)).order_by(Card.title.desc())
     cards = db.session.scalars(stmt).all()
     return CardSchema(many=True).dump(cards)
     # dump() will convert a Python object into a JSON object, 

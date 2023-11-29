@@ -32,30 +32,38 @@ def db_seed():
         )
 
     ]
-
+    # These could all move to the bottom, however if we create the users first, we
+    # can dynamically reference them.
+    db.session.add_all(users)
+    db.session.commit()
     cards = [
     Card(
         title = "Start the project",
         description = "Stage 1 = Create ERD",
         status = "Done",
         date_created = date.today(),
+        user_id = 1
     ),
     Card(
         title = "ORM Queries",
         description = "Stage 2 = Implement CRUD queries",
         status = "In Progress",
-        date_created = date.today()
+        date_created = date.today(),
+        # Another way to get the user dynamically after it's been commited
+        user_id = users[0].id
     ),
     Card(
         title = "Marshmallow",
         description = "Stage 3 = Implement JSONify of models",
         status = "In Progress",
-        date_created = date.today()
+        date_created = date.today(),
+        user_id = 2
     ),
     ]
+    
+    
     # Adding transaction to queue
     db.session.add_all(cards)
-    db.session.add_all(users)
     # Commiting transaction
     db.session.commit()
 
