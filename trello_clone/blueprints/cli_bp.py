@@ -73,7 +73,18 @@ def db_seed():
             message = "comment 1",
             user_id = users[0].id,
             card_id=cards[2].id
-        )
+        ),
+        Comment(
+            message = "comment 2",
+            user_id = users[1].id,
+            card_id=cards[2].id
+        ),
+        Comment(
+            message = "comment 3",
+            user_id = users[1].id,
+            card_id=cards[0].id
+        ),
     ]
-
+    db.session.add_all(comments)
+    db.session.commit()
     print("Database Seeded")

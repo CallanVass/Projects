@@ -23,6 +23,7 @@ class CardSchema(ma.Schema):
     # References the UserSchema to produce nested result inside the card (of the user)
     # Tell Marshmallow to next a UserSchema instance when serializing
     user = fields.Nested("UserSchema", exclude=["password"])
+    comments = fields.Nested("CommentSchema", many=True, exclude=["card"])
 
     class Meta:
-        fields = ("id", "title", "description", "status", "date_created", "user")
+        fields = ("id", "title", "description", "status", "date_created", "user", "comments")
