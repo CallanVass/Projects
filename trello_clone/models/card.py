@@ -17,6 +17,7 @@ class Card(db.Model):
     # SQLAlchemy relationship: nests an instance of a related model in this one
     user = db.relationship("User", back_populates="cards")
     # backpopulates links the relationships
+    comments = db.relationship("Comment", back_populates="card")
    
 class CardSchema(ma.Schema):
     # References the UserSchema to produce nested result inside the card (of the user)

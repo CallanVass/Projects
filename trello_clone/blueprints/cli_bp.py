@@ -2,6 +2,7 @@ from flask import Blueprint
 from setup import db, bcrypt
 from models.card import Card
 from models.user import User
+from models.comment import Comment
 from datetime import date
 
 # Declaring the blueprint (Dunders are variables or functions that have a special meaning)
@@ -66,5 +67,13 @@ def db_seed():
     db.session.add_all(cards)
     # Commiting transaction
     db.session.commit()
+
+    comments = [
+        Comment(
+            message = "comment 1",
+            user_id = users[0].id,
+            card_id=cards[2].id
+        )
+    ]
 
     print("Database Seeded")
