@@ -4,6 +4,7 @@ from flask_marshmallow import Marshmallow
 from flask_bcrypt import Bcrypt
 from flask_jwt_extended import JWTManager
 from os import environ
+from marshmallow.exceptions import ValidationError
 
 # from sqlalchemy.exc import IntegrityError
 
@@ -31,6 +32,10 @@ jwt = JWTManager(app)
 @app.errorhandler(401)
 def unauthorised(err):
     return {"error": "You are not authorised to access this resource"}
+
+@app.errorhandler(ValidationError)
+def validation_error(err):
+    return {"error": err.messages}
 
 # Handles error generally if route doesn't have try/except
 # @app.errorhandler(IntegrityError)
